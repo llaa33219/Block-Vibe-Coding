@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block Vibe Coding - AI 블록 코딩</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🎨 Block Vibe Coding</h1>
+            <p class="subtitle">AI가 코드를 생성하는 스마트 블록 코딩</p>
+        </header>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <button id="runBtn" class="btn btn-primary">▶ 실행</button>
+            <button id="exportBtn" class="btn btn-secondary">💾 내보내기</button>
+            <button id="clearBtn" class="btn btn-danger">🗑️ 초기화</button>
+            <div class="model-info">
+                <span class="model-badge">🤖 Qwen3 Coder 480B</span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Block Palette -->
+            <div class="block-palette">
+                <h3>블록 팔레트</h3>
+                <div class="palette-section">
+                    <h4>기본 블록</h4>
+                    <div class="block-item" draggable="true" data-block-type="action">
+                        <div class="block action-block">
+                            <span class="block-label">동작 블록</span>
+                        </div>
+                    </div>
+                    <div class="block-item" draggable="true" data-block-type="condition">
+                        <div class="block condition-block">
+                            <span class="block-label">조건 블록</span>
+                        </div>
+                    </div>
+                    <div class="block-item" draggable="true" data-block-type="loop">
+                        <div class="block loop-block">
+                            <span class="block-label">반복 블록</span>
+                        </div>
+                    </div>
+                    <div class="block-item" draggable="true" data-block-type="function">
+                        <div class="block function-block">
+                            <span class="block-label">함수 블록</span>
+                        </div>
+                    </div>
+                    <div class="block-item" draggable="true" data-block-type="event">
+                        <div class="block event-block">
+                            <span class="block-label">이벤트 블록</span>
+                        </div>
+                    </div>
+                    <div class="block-item" draggable="true" data-block-type="ui">
+                        <div class="block ui-block">
+                            <span class="block-label">UI 블록</span>
+                        </div>
+                    </div>
+                    <div class="block-item" draggable="true" data-block-type="data">
+                        <div class="block data-block">
+                            <span class="block-label">데이터 블록</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workspace -->
+            <div class="workspace-container">
+                <div class="workspace-header">
+                    <h3>작업 공간</h3>
+                    <span class="hint">블록을 드래그하여 추가하고, 내용을 입력하세요!</span>
+                </div>
+                <div id="workspace" class="workspace">
+                    <!-- Blocks will be dropped here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for AI Generation -->
+    <div id="aiModal" class="modal">
+        <div class="modal-content">
+            <h3>AI 코드 생성 중...</h3>
+            <div class="loader"></div>
+            <p id="aiStatus">블록 코드를 생성하고 있습니다...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/ai.js"></script>
+    <script src="js/blocks.js"></script>
+    <script src="js/executor.js"></script>
+    <script src="js/exporter.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
+
