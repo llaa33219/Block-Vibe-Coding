@@ -313,20 +313,39 @@ class BlockVibeCoding {
                 break;
         }
 
-        // 블록 정의 등록
-        if (!Blockly.Blocks[blockDef.id]) {
-            Blockly.Blocks[blockDef.id] = {
-                init: function() {
-                    this.jsonInit(blockJson);
+        // 블록 정의 등록 (항상 최신 상태로 덮어쓰기)
+        Blockly.Blocks[blockDef.id] = {
+            init: function() {
+                this.jsonInit(blockJson);
+            }
+        };
+
+        // JavaScript 코드 생성기 등록
+        // CRITICAL: 직접 값을 사용하여 클로저 문제 방지
+        const self = this;
+        const generatedCode = String(blockDef.generatedCode); // 문자열로 복사
+        const hasInput = Boolean(blockDef.hasInput);
+        const blockType = String(blockDef.type);
+        
+        // forBlock 방식으로도 등록 (최신 Blockly 호환)
+        if (Blockly.JavaScript.forBlock) {
+            Blockly.JavaScript.forBlock[blockDef.id] = function(block, generator) {
+                let code = generatedCode;
+                
+                if (hasInput) {
+                    const inputValue = block.getFieldValue('INPUT');
+                    code = code.replace(/\{\{INPUT\}\}/g, inputValue);
+                }
+
+                if (blockType === 'value' || blockType === 'boolean') {
+                    return [code, Blockly.JavaScript.ORDER_NONE];
+                } else {
+                    return code + '\n';
                 }
             };
         }
-
-        // JavaScript 코드 생성기 - 클로저로 blockDef 캡처
-        const generatedCode = blockDef.generatedCode;
-        const hasInput = blockDef.hasInput;
-        const blockType = blockDef.type;
-
+        
+        // 기존 방식으로도 등록 (레거시 호환)
         Blockly.JavaScript[blockDef.id] = function(block) {
             let code = generatedCode;
             
@@ -342,7 +361,11 @@ class BlockVibeCoding {
             }
         };
         
+        // 등록 확인
         console.log(`✅ 블록 등록됨: ${blockDef.id} (${blockDef.name})`);
+        console.log(`   - Blockly.Blocks: ${!!Blockly.Blocks[blockDef.id]}`);
+        console.log(`   - Blockly.JavaScript: ${!!Blockly.JavaScript[blockDef.id]}`);
+        console.log(`   - Code: ${generatedCode.substring(0, 50)}...`);
     }
 
     updateCustomBlocksList() {
