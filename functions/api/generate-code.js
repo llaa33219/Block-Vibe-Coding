@@ -96,31 +96,76 @@ export async function onRequestOptions() {
 }
 
 function generatePrompt(description) {
-    return `Analyze this block request and create a complete block definition: "${description}"
+    return `You are an expert at creating visual programming blocks for Blockly. Analyze this user request and create a perfect block definition: "${description}"
 
-You need to determine:
-1. Block name (short, descriptive)
-2. Block type (statement/value/boolean/output)
-3. Whether it needs an input field (true/false)
-4. Block color in hex format
-5. Working JavaScript code that implements the functionality
+IMPORTANT GUIDELINES:
+1. **Block Name**: Short, clear, action-oriented (2-4 words max)
+2. **Block Type Selection**:
+   - "statement": Actions/commands that DO something (e.g., show alert, create element, change color)
+   - "value": Calculations or data that RETURN a value (e.g., random number, get text, calculate sum)
+   - "boolean": Logic checks that return true/false (e.g., is number even, is text empty)
+   - "output": Same as statement but for display purposes
+3. **Input Field**: Set hasInput to true ONLY if user needs to provide a parameter (text, number, etc.)
+   - Use {{INPUT}} placeholder in code where user input should be inserted
+4. **Color Scheme**:
+   - Actions/Commands: #5C68A6 (blue)
+   - Math/Numbers: #59A85B (green)
+   - Text/String: #5BA58C (teal)
+   - Logic/Boolean: #D65CD6 (purple)
+   - UI/Display: #FF8C1A (orange)
+   - Events: #FFAB19 (yellow)
+5. **JavaScript Code**:
+   - Write clean, working, browser-compatible code
+   - Use modern ES6+ syntax
+   - For UI elements, use DOM manipulation (document.createElement, etc.)
+   - For alerts/prompts, use native browser APIs
+   - Make code production-ready and safe
 
-Block types:
-- statement: Commands that execute actions (can connect before/after)
-- value: Returns a value (can be used as input to other blocks)
-- boolean: Returns true/false
-- output: Displays or outputs something
+EXAMPLES:
 
-If the block needs user input, use {{INPUT}} as placeholder in the code.
-
-Respond ONLY with valid JSON in this exact format:
+Request: "버튼 만들기"
+Response:
 {
-  "name": "block name here",
-  "description": "what this block does",
+  "name": "버튼 생성",
+  "description": "클릭 가능한 버튼을 생성합니다",
   "type": "statement",
-  "color": "#5b67a5",
+  "color": "#FF8C1A",
+  "hasInput": true,
+  "code": "const btn = document.createElement('button');\\nbtn.textContent = '{{INPUT}}';\\nbtn.onclick = () => alert('버튼 클릭됨!');\\ndocument.body.appendChild(btn);"
+}
+
+Request: "랜덤 숫자"
+Response:
+{
+  "name": "랜덤 숫자",
+  "description": "0부터 100 사이의 랜덤 숫자를 반환합니다",
+  "type": "value",
+  "color": "#59A85B",
   "hasInput": false,
-  "code": "console.log('example');"
+  "code": "Math.floor(Math.random() * 101)"
+}
+
+Request: "알림창 띄우기"
+Response:
+{
+  "name": "알림 표시",
+  "description": "메시지를 알림창으로 표시합니다",
+  "type": "statement",
+  "color": "#FF8C1A",
+  "hasInput": true,
+  "code": "alert('{{INPUT}}');"
+}
+
+Now create a block for: "${description}"
+
+Respond ONLY with valid JSON (no markdown, no explanation):
+{
+  "name": "block name",
+  "description": "clear description",
+  "type": "statement|value|boolean|output",
+  "color": "#HEXCODE",
+  "hasInput": true|false,
+  "code": "working javascript code"
 }`;
 }
 

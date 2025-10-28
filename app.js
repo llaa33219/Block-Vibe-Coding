@@ -1,6 +1,7 @@
 // Block Vibe Coding - Main Application
 class BlockVibeCoding {
     constructor() {
+        console.log('🧱 Block Vibe Coding 시작...');
         this.workspace = null;
         this.customBlocks = [];
         this.init();
@@ -15,6 +16,8 @@ class BlockVibeCoding {
         
         // 로컬 스토리지에서 사용자 정의 블록 로드
         this.loadCustomBlocks();
+        
+        console.log('✅ Block Vibe Coding 준비 완료!');
     }
 
     initBlockly() {
@@ -133,6 +136,25 @@ class BlockVibeCoding {
         document.getElementById('copyCodeBtn').addEventListener('click', () => {
             this.copyCode();
         });
+
+        // 블록 모두 삭제 버튼
+        document.getElementById('clearBlocksBtn').addEventListener('click', () => {
+            if (confirm('정말로 모든 사용자 정의 블록을 삭제하시겠습니까?')) {
+                this.clearAllBlocks();
+            }
+        });
+    }
+
+    clearAllBlocks() {
+        // localStorage 초기화
+        localStorage.removeItem('blockVibeCustomBlocks');
+        this.customBlocks = [];
+        
+        // UI 업데이트
+        this.updateCustomBlocksList();
+        
+        // 페이지 새로고침 (블록 정의 완전히 제거)
+        location.reload();
     }
 
     async createCustomBlock() {
@@ -148,8 +170,12 @@ class BlockVibeCoding {
         document.getElementById('createBlockBtn').disabled = true;
 
         try {
+            console.log(`🤖 AI에게 블록 생성 요청: "${description}"`);
+            
             // AI에게 블록 정의 생성 요청
             const blockDef = await this.generateBlockDefinition(description);
+            
+            console.log('📥 AI 응답:', blockDef);
 
             // 블록 정의 생성
             const blockId = 'custom_' + Date.now();
@@ -162,6 +188,8 @@ class BlockVibeCoding {
                 hasInput: blockDef.hasInput,
                 generatedCode: blockDef.code
             };
+
+            console.log('🔧 블록 정의:', blockDefinition);
 
             // Blockly 블록 등록
             this.registerBlocklyBlock(blockDefinition);
@@ -184,8 +212,8 @@ class BlockVibeCoding {
             // 성공 메시지
             this.showToast(`✅ "${blockDefinition.name}" 블록이 생성되었습니다!`);
         } catch (error) {
-            console.error('블록 생성 오류:', error);
-            alert('블록 생성 중 오류가 발생했습니다: ' + error.message);
+            console.error('❌ 블록 생성 오류:', error);
+            alert('블록 생성 중 오류가 발생했습니다:\n' + error.message);
         } finally {
             document.getElementById('loadingIndicator').style.display = 'none';
             document.getElementById('createBlockBtn').disabled = false;
@@ -205,21 +233,30 @@ class BlockVibeCoding {
             });
 
             if (!response.ok) {
-                throw new Error('AI 블록 정의 생성 실패');
+                const errorText = await response.text();
+                throw new Error(`API 오류 (${response.status}): ${errorText}`);
             }
 
             const data = await response.json();
+            
+            // 응답 검증
+            if (!data.code || !data.name) {
+                console.warn('⚠️ AI 응답이 불완전합니다. 기본값 사용.');
+                throw new Error('AI 응답 형식 오류');
+            }
+            
             return data;
         } catch (error) {
-            console.error('블록 정의 생성 오류:', error);
+            console.error('❌ 블록 정의 생성 오류:', error);
             // 폴백: 기본 블록 정의 반환
+            console.log('🔄 기본 블록으로 대체합니다.');
             return {
-                name: '사용자 블록',
+                name: description.length > 20 ? description.substring(0, 20) : description,
                 description: description,
                 type: 'statement',
-                color: '#5b67a5',
+                color: '#5C68A6',
                 hasInput: false,
-                code: `// ${description}\nconsole.log("실행됨");`
+                code: `// ${description}\nconsole.log("${description} 실행됨");`
             };
         }
     }
@@ -276,27 +313,36 @@ class BlockVibeCoding {
                 break;
         }
 
-        Blockly.Blocks[blockDef.id] = {
-            init: function() {
-                this.jsonInit(blockJson);
-            }
-        };
+        // 블록 정의 등록
+        if (!Blockly.Blocks[blockDef.id]) {
+            Blockly.Blocks[blockDef.id] = {
+                init: function() {
+                    this.jsonInit(blockJson);
+                }
+            };
+        }
 
-        // JavaScript 코드 생성기
+        // JavaScript 코드 생성기 - 클로저로 blockDef 캡처
+        const generatedCode = blockDef.generatedCode;
+        const hasInput = blockDef.hasInput;
+        const blockType = blockDef.type;
+
         Blockly.JavaScript[blockDef.id] = function(block) {
-            let code = blockDef.generatedCode;
+            let code = generatedCode;
             
-            if (blockDef.hasInput) {
+            if (hasInput) {
                 const inputValue = block.getFieldValue('INPUT');
                 code = code.replace(/\{\{INPUT\}\}/g, inputValue);
             }
 
-            if (blockDef.type === 'value' || blockDef.type === 'boolean') {
+            if (blockType === 'value' || blockType === 'boolean') {
                 return [code, Blockly.JavaScript.ORDER_NONE];
             } else {
                 return code + '\n';
             }
         };
+        
+        console.log(`✅ 블록 등록됨: ${blockDef.id} (${blockDef.name})`);
     }
 
     updateCustomBlocksList() {
@@ -327,7 +373,8 @@ class BlockVibeCoding {
             const code = Blockly.JavaScript.workspaceToCode(this.workspace);
             document.querySelector('#codePreview code').textContent = code || '// 블록을 추가하면 코드가 여기에 표시됩니다.';
         } catch (error) {
-            console.error('코드 생성 오류:', error);
+            console.error('❌ 코드 생성 오류:', error);
+            document.querySelector('#codePreview code').textContent = `// 오류: ${error.message}\n// 페이지를 새로고침해보세요.`;
         }
     }
 
@@ -481,12 +528,20 @@ ${code}
         if (saved) {
             try {
                 this.customBlocks = JSON.parse(saved);
+                console.log(`📦 저장된 블록 ${this.customBlocks.length}개 로드 중...`);
+                
                 this.customBlocks.forEach(block => {
+                    // 블록 재등록
                     this.registerBlocklyBlock(block);
                 });
+                
                 this.updateCustomBlocksList();
+                console.log('✅ 모든 블록이 성공적으로 로드되었습니다.');
             } catch (error) {
-                console.error('저장된 블록 로드 오류:', error);
+                console.error('❌ 저장된 블록 로드 오류:', error);
+                // 오류 발생 시 localStorage 초기화
+                localStorage.removeItem('blockVibeCustomBlocks');
+                this.customBlocks = [];
             }
         }
     }
