@@ -1,0 +1,23 @@
+{
+  "name": "block-vibe-coding",
+  "version": "1.0.0",
+  "description": "AI-powered visual block coding platform",
+  "main": "app.js",
+  "scripts": {
+    "dev": "wrangler pages dev .",
+    "deploy": "wrangler pages deploy .",
+    "test": "echo \"No tests specified\""
+  },
+  "keywords": [
+    "blockly",
+    "coding",
+    "ai",
+    "education"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
+
