@@ -61,16 +61,22 @@ npm run deploy
 
 ## 📖 사용 방법
 
-### 1. 새 블록 만들기
+### 1. 새 블록 만들기 (초간단!)
 
-1. "➕ 새 블록 추가" 버튼 클릭
-2. 블록 정보 입력:
-   - **이름**: 블록의 이름 (예: "버튼 만들기")
-   - **설명**: 블록이 무엇을 하는지 설명 (예: "클릭 가능한 버튼을 생성합니다")
-   - **타입**: Statement, Value, Boolean, Output 중 선택
-   - **색상**: 블록의 색상 선택
-3. "AI로 블록 생성" 클릭
-4. AI가 코드를 생성하면 블록이 자동으로 추가됨
+1. 왼쪽 사이드바의 텍스트 입력창에 원하는 블록 설명 입력
+   - 예: "버튼 만들기"
+   - 예: "알림창 띄우기"
+   - 예: "랜덤 숫자 생성하기"
+2. "🤖 AI로 생성" 버튼 클릭 (또는 Ctrl+Enter)
+3. AI가 자동으로 블록 이름, 타입, 색상, 코드 모두 생성!
+4. 생성된 블록이 툴박스에 자동으로 추가됨
+
+**AI가 자동으로 결정하는 것들:**
+- 블록 이름
+- 블록 타입 (statement/value/boolean/output)
+- 블록 색상
+- 입력 필드 필요 여부
+- 실행될 JavaScript 코드
 
 ### 2. 블록 사용하기
 
@@ -101,7 +107,7 @@ npm run deploy
 
 - **프론트엔드**: Vanilla JavaScript, Blockly
 - **백엔드**: Cloudflare Functions (서버리스)
-- **AI**: HuggingFace Inference API (Llama 3.3 70B)
+- **AI**: HuggingFace Inference API (Qwen3-Coder-480B-A35B-Instruct)
 - **호스팅**: Cloudflare Pages
 
 ## 📝 환경 변수

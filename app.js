@@ -107,9 +107,16 @@ class BlockVibeCoding {
     }
 
     setupEventListeners() {
-        // 새 블록 추가 버튼
-        document.getElementById('addBlockBtn').addEventListener('click', () => {
-            this.showBlockModal();
+        // 블록 생성 버튼
+        document.getElementById('createBlockBtn').addEventListener('click', () => {
+            this.createCustomBlock();
+        });
+
+        // Enter 키로도 생성 가능
+        document.getElementById('blockRequest').addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                this.createCustomBlock();
+            }
         });
 
         // 실행 버튼
@@ -122,58 +129,17 @@ class BlockVibeCoding {
             this.exportCode();
         });
 
-        // 모달 관련
-        document.querySelector('.close').addEventListener('click', () => {
-            this.hideBlockModal();
-        });
-
-        document.getElementById('cancelBlockBtn').addEventListener('click', () => {
-            this.hideBlockModal();
-        });
-
-        document.getElementById('createBlockBtn').addEventListener('click', () => {
-            this.createCustomBlock();
-        });
-
         // 코드 복사 버튼
         document.getElementById('copyCodeBtn').addEventListener('click', () => {
             this.copyCode();
         });
-
-        // 모달 외부 클릭 시 닫기
-        window.addEventListener('click', (e) => {
-            const modal = document.getElementById('blockModal');
-            if (e.target === modal) {
-                this.hideBlockModal();
-            }
-        });
-    }
-
-    showBlockModal() {
-        const modal = document.getElementById('blockModal');
-        modal.classList.add('show');
-        // 폼 초기화
-        document.getElementById('blockName').value = '';
-        document.getElementById('blockDescription').value = '';
-        document.getElementById('blockType').value = 'statement';
-        document.getElementById('blockColor').value = '#5b67a5';
-        document.getElementById('hasInput').checked = false;
-    }
-
-    hideBlockModal() {
-        const modal = document.getElementById('blockModal');
-        modal.classList.remove('show');
     }
 
     async createCustomBlock() {
-        const name = document.getElementById('blockName').value.trim();
-        const description = document.getElementById('blockDescription').value.trim();
-        const type = document.getElementById('blockType').value;
-        const color = document.getElementById('blockColor').value;
-        const hasInput = document.getElementById('hasInput').checked;
+        const description = document.getElementById('blockRequest').value.trim();
 
-        if (!name || !description) {
-            alert('블록 이름과 설명을 입력해주세요.');
+        if (!description) {
+            alert('블록 설명을 입력해주세요.');
             return;
         }
 
@@ -182,19 +148,19 @@ class BlockVibeCoding {
         document.getElementById('createBlockBtn').disabled = true;
 
         try {
-            // AI에게 코드 생성 요청
-            const generatedCode = await this.generateBlockCode(name, description, type, hasInput);
+            // AI에게 블록 정의 생성 요청
+            const blockDef = await this.generateBlockDefinition(description);
 
             // 블록 정의 생성
             const blockId = 'custom_' + Date.now();
             const blockDefinition = {
                 id: blockId,
-                name: name,
-                description: description,
-                type: type,
-                color: color,
-                hasInput: hasInput,
-                generatedCode: generatedCode
+                name: blockDef.name,
+                description: blockDef.description,
+                type: blockDef.type,
+                color: blockDef.color,
+                hasInput: blockDef.hasInput,
+                generatedCode: blockDef.code
             };
 
             // Blockly 블록 등록
@@ -212,10 +178,11 @@ class BlockVibeCoding {
             // 툴박스 갱신
             this.refreshToolbox();
 
-            // 모달 닫기
-            this.hideBlockModal();
+            // 입력 필드 초기화
+            document.getElementById('blockRequest').value = '';
 
-            alert('블록이 성공적으로 생성되었습니다!');
+            // 성공 메시지
+            this.showToast(`✅ "${blockDefinition.name}" 블록이 생성되었습니다!`);
         } catch (error) {
             console.error('블록 생성 오류:', error);
             alert('블록 생성 중 오류가 발생했습니다: ' + error.message);
@@ -225,7 +192,7 @@ class BlockVibeCoding {
         }
     }
 
-    async generateBlockCode(name, description, type, hasInput) {
+    async generateBlockDefinition(description) {
         try {
             const response = await fetch('/api/generate-code', {
                 method: 'POST',
@@ -233,29 +200,45 @@ class BlockVibeCoding {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    name: name,
-                    description: description,
-                    type: type,
-                    hasInput: hasInput
+                    description: description
                 })
             });
 
             if (!response.ok) {
-                throw new Error('AI 코드 생성 실패');
+                throw new Error('AI 블록 정의 생성 실패');
             }
 
             const data = await response.json();
-            return data.code;
+            return data;
         } catch (error) {
-            console.error('코드 생성 오류:', error);
-            // 폴백: 기본 코드 반환
-            return this.getDefaultBlockCode(name, description);
+            console.error('블록 정의 생성 오류:', error);
+            // 폴백: 기본 블록 정의 반환
+            return {
+                name: '사용자 블록',
+                description: description,
+                type: 'statement',
+                color: '#5b67a5',
+                hasInput: false,
+                code: `// ${description}\nconsole.log("실행됨");`
+            };
         }
     }
 
-    getDefaultBlockCode(name, description) {
-        // AI가 실패한 경우 기본 코드 반환
-        return `// ${name}\n// ${description}\nconsole.log("${name} 실행됨");`;
+    showToast(message) {
+        // 간단한 토스트 메시지 표시
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 100);
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
 
     registerBlocklyBlock(blockDef) {
